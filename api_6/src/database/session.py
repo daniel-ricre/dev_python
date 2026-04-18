@@ -10,7 +10,8 @@ try:
     DATABASE_URL = os.getenv("DATABASE_URL")
     engine = create_engine(DATABASE_URL)
 except:
-    DATABASE_URL = os.getenv("DATABASE_URL_LOCAL")
+    dir_database = os.getenv("DATABASE_URL_LOCAL")
+    DATABASE_URL = f"sqlite:///api_6/{dir_database}"
     engine = create_engine(DATABASE_URL, connect_args={
                            "check_same_thread": False})
 
