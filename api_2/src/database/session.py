@@ -7,7 +7,7 @@ import os
 load_dotenv()
 
 try:
-    DATABASE_URL = "postgresql://db_sql_m3z3_user:raOTTbzp84DrkznlETjgsxiIupSoobqR@dpg-d7cb8sflk1mc7394gmug-a.oregon-postgres.render.com/db_sql_m3z3"
+    DATABASE_URL = os.getenv("DATABASE_URL")
     engine = create_engine(DATABASE_URL)
 except:
     dir_database = os.getenv("DATABASE_URL_LOCAL")
