@@ -6,16 +6,11 @@ import os
 
 load_dotenv()
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL, sqlite:///api_orders/src/database/test.db")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-try:
-    engine = create_engine(DATABASE_URL)
-except:
-    engine = create_engine(
-        DATABASE_URL,
-        connect_args={"check_same_thread": False}
-    )
+
+engine = create_engine(DATABASE_URL)
+
 
 SessionLocal = sessionmaker(
     autocommit=False,
