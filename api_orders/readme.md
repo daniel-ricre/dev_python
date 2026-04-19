@@ -3,4 +3,5 @@ tecnologias:
 1.FastAPI, Sqlalchemy, PostgreSQl
 2.requirements.txt: dependencias --> (contiene dependencias extra para escalabilidad)
 3.Repo en GitHub: https://github.com/daniel-ricre/dev_python/api_orders
-4.Despliegue en Render:
+4.Despliegue en Render: https://dev-python-blxi.onrender.com
+5.Documentacion(Swagger UI): https://dev-python-blxi.onrender.com/docs
