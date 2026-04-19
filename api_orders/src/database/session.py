@@ -6,17 +6,16 @@ import os
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+try:
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    engine = create_engine(DATABASE_URL)
+except:
+    dir_database = os.getenv("DATABASE_URL_LOCAL")
+    DATABASE_URL = f"sqlite:///api_1/{dir_database}"
+    engine = create_engine(DATABASE_URL, connect_args={
+                           "check_same_thread": False})
 
-
-engine = create_engine(DATABASE_URL)
-
-
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
-)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
