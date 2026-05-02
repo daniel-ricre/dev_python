@@ -3,7 +3,6 @@ services:
   - type: web
     runtime: docker
     name: art-backend
-    repo: https://github.com/tu-usuario/tu-repositorio
     rootDir: backend
     plan: free
     healthCheckPath: /docs
@@ -40,7 +39,6 @@ services:
   - type: worker
     runtime: docker
     name: art-worker
-    repo: https://github.com/tu-usuario/tu-repositorio
     rootDir: backend
     dockerCommand: celery -A app.celery_app beat --loglevel=info
     plan: free
@@ -63,7 +61,6 @@ services:
   - type: worker
     runtime: docker
     name: art-celery
-    repo: https://github.com/tu-usuario/tu-repositorio
     rootDir: backend
     dockerCommand: celery -A app.tasks.blockchain_monitor worker --loglevel=info
     plan: free
@@ -82,11 +79,10 @@ services:
       - key: ESCROW_CONTRACT_ADDRESS
         sync: false
 
-  # 4. Frontend: Aplicación React (como servicio web)
+  # 4. Frontend: Aplicación React
   - type: web
     runtime: docker
     name: art-frontend
-    repo: https://github.com/tu-usuario/tu-repositorio
     rootDir: frontend
     plan: free
     envVars:
