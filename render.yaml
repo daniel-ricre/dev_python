@@ -1,5 +1,4 @@
 services:
-  # 1. Backend: API de FastAPI
   - type: web
     runtime: docker
     name: art-backend
@@ -34,7 +33,6 @@ services:
       - key: CLOUDINARY_API_SECRET
         sync: false
 
-  # 2. Worker: Monitor de Blockchain (Celery Beat)
   - type: worker
     runtime: docker
     name: art-worker
@@ -55,7 +53,6 @@ services:
       - key: ESCROW_CONTRACT_ADDRESS
         sync: false
 
-  # 3. Worker Celery (ejecutor de tareas)
   - type: worker
     runtime: docker
     name: art-celery
@@ -76,7 +73,6 @@ services:
       - key: ESCROW_CONTRACT_ADDRESS
         sync: false
 
-  # 4. Frontend: Aplicación React
   - type: web
     runtime: docker
     name: art-frontend
@@ -94,4 +90,4 @@ databases:
   - name: art-db
     plan: free
   - name: art-redis
-    plan: free
+    plan: frees
