@@ -1,0 +1,244 @@
+/* Reset básico */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f9f7f1;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Cabecera con gradiente (como la primera versión) */
+header {
+    background: linear-gradient(135deg, #2c5e2e, #4a7c59);
+    color: white;
+    padding: 2rem 1rem;
+    text-align: center;
+    position: relative;
+}
+
+header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.25rem;
+}
+
+header p {
+    font-style: italic;
+    opacity: 0.9;
+}
+
+/* Botón de administración en el header */
+.btn-admin {
+    background: #ffd54f;
+    border: none;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+.btn-admin:hover {
+    background: #ffb300;
+}
+
+/* Navegación de filtros */
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.filtro-btn {
+    background: #f0f0f0;
+    border: none;
+    padding: 0.5rem 1.2rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    text-transform: capitalize;
+}
+
+.filtro-btn:hover {
+    background: #d4e6d4;
+}
+
+.filtro-btn.activo {
+    background: #2c5e2e;
+    color: white;
+}
+
+/* Panel de administración */
+.admin-panel {
+    background: white;
+    max-width: 600px;
+    margin: 1.5rem auto;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.admin-panel h2 {
+    margin-bottom: 1rem;
+    color: #2c5e2e;
+}
+
+.form-producto .campo {
+    margin-bottom: 1rem;
+}
+.form-producto label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+.form-producto input,
+.form-producto textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-family: inherit;
+}
+
+.btn-agregar {
+    background: #2c5e2e;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.2s;
+}
+.btn-agregar:hover {
+    background: #1f4421;
+}
+
+.mensaje {
+    margin-top: 1rem;
+    font-weight: bold;
+}
+
+/* Cuadrícula de productos */
+.grid-productos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Tarjeta de producto */
+.producto-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.producto-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.producto-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background: #f0f0f0;
+    border-bottom: 1px solid #eee;
+}
+
+.producto-info {
+    padding: 1rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.producto-info h3 {
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+    color: #2c3e2e;
+}
+
+.categoria-badge {
+    display: inline-block;
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 15px;
+    margin-bottom: 0.5rem;
+    align-self: flex-start;
+}
+
+.descripcion {
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 1rem;
+    flex-grow: 1;
+}
+
+.precio {
+    font-weight: bold;
+    font-size: 1.3rem;
+    color: #c05131;
+    margin-top: auto;
+    text-align: right;
+}
+
+/* Botón de eliminar en tarjeta (solo visible en modo admin) */
+.producto-card .btn-eliminar {
+    background: #d32f2f;
+    color: white;
+    border: none;
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    transition: background 0.2s;
+}
+.producto-card .btn-eliminar:hover {
+    background: #b71c1c;
+}
+
+/* Mensaje sin resultados */
+.sin-resultados {
+    text-align: center;
+    padding: 3rem;
+    color: #777;
+    font-size: 1.1rem;
+}
+
+/* Pie de página */
+footer {
+    background: #2c5e2e;
+    color: white;
+    text-align: center;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .grid-productos {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+}
