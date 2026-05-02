@@ -90,4 +90,4 @@ databases:
   - name: art-db
     plan: free
   - name: art-redis
-    plan: frees
+    plan: free
