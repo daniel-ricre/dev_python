@@ -14,16 +14,13 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          type: keyvalue
+          type: redis
           name: art-redis
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
       - key: FRONTEND_URL
-        fromService:
-          type: web
-          name: art-frontend
-          property: url
+        sync: false
       - key: ARBITRUM_RPC_URL
         sync: false
       - key: ESCROW_CONTRACT_ADDRESS
@@ -54,7 +51,7 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          type: keyvalue
+          type: redis
           name: art-redis
           property: connectionString
       - key: ARBITRUM_RPC_URL
@@ -77,7 +74,7 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          type: keyvalue
+          type: redis
           name: art-redis
           property: connectionString
       - key: ARBITRUM_RPC_URL
@@ -94,10 +91,7 @@ services:
     plan: free
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: art-backend
-          property: url
+        sync: false
       - key: VITE_ESCROW_CONTRACT
         sync: false
       - key: VITE_USDC_ADDRESS
