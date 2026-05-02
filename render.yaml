@@ -1,12 +1,10 @@
 services:
-  # 1. Backend: API de FastAPI (Python nativo)
   - type: web
-    runtime: python
+    runtime: docker
     name: art-backend
     rootDir: Arte_Tienda_Cripto_Marketplace/art_marketplace/backend
     plan: free
     healthCheckPath: /docs
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -35,12 +33,11 @@ services:
       - key: CLOUDINARY_API_SECRET
         sync: false
 
-  # 2. Worker: Monitor de Blockchain (Celery Beat)
   - type: worker
-    runtime: python
+    runtime: docker
     name: art-worker
     rootDir: Arte_Tienda_Cripto_Marketplace/art_marketplace/backend
-    startCommand: celery -A app.celery_app beat --loglevel=info
+    dockerCommand: celery -A app.celery_app beat --loglevel=info
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -56,12 +53,11 @@ services:
       - key: ESCROW_CONTRACT_ADDRESS
         sync: false
 
-  # 3. Worker Celery (ejecutor de tareas)
   - type: worker
-    runtime: python
+    runtime: docker
     name: art-celery
     rootDir: Arte_Tienda_Cripto_Marketplace/art_marketplace/backend
-    startCommand: celery -A app.tasks.blockchain_monitor worker --loglevel=info
+    dockerCommand: celery -A app.tasks.blockchain_monitor worker --loglevel=info
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -77,13 +73,11 @@ services:
       - key: ESCROW_CONTRACT_ADDRESS
         sync: false
 
-  # 4. Frontend: Aplicación React (sitio estático)
-  - type: static
+  - type: web
+    runtime: docker
     name: art-frontend
     rootDir: Arte_Tienda_Cripto_Marketplace/art_marketplace/frontend
     plan: free
-    buildCommand: npm install && npm run build
-    publishPath: dist
     envVars:
       - key: VITE_API_URL
         sync: false
