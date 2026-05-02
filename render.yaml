@@ -3,7 +3,7 @@ services:
   - type: web
     runtime: docker
     name: art-backend
-    rootDir: backend
+    rootDir: Arte_Tienda_Cripto_Marketplace/art_marketplace/backend
     plan: free
     healthCheckPath: /docs
     envVars:
@@ -38,7 +38,7 @@ services:
   - type: worker
     runtime: docker
     name: art-worker
-    rootDir: backend
+    rootDir: Arte_Tienda_Cripto_Marketplace/art_marketplace/backend
     dockerCommand: celery -A app.celery_app beat --loglevel=info
     plan: free
     envVars:
@@ -59,7 +59,7 @@ services:
   - type: worker
     runtime: docker
     name: art-celery
-    rootDir: backend
+    rootDir: Arte_Tienda_Cripto_Marketplace/art_marketplace/backend
     dockerCommand: celery -A app.tasks.blockchain_monitor worker --loglevel=info
     plan: free
     envVars:
@@ -80,7 +80,7 @@ services:
   - type: web
     runtime: docker
     name: art-frontend
-    rootDir: frontend
+    rootDir: Arte_Tienda_Cripto_Marketplace/art_marketplace/frontend
     plan: free
     envVars:
       - key: VITE_API_URL
