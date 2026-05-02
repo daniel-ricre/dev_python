@@ -12,8 +12,7 @@ services:
           name: art-db
           property: connectionString
       - key: REDIS_URL
-        fromService:
-          type: redis
+        fromDatabase:
           name: art-redis
           property: connectionString
       - key: SECRET_KEY
@@ -48,8 +47,7 @@ services:
           name: art-db
           property: connectionString
       - key: REDIS_URL
-        fromService:
-          type: redis
+        fromDatabase:
           name: art-redis
           property: connectionString
       - key: ARBITRUM_RPC_URL
@@ -70,8 +68,7 @@ services:
           name: art-db
           property: connectionString
       - key: REDIS_URL
-        fromService:
-          type: redis
+        fromDatabase:
           name: art-redis
           property: connectionString
       - key: ARBITRUM_RPC_URL
