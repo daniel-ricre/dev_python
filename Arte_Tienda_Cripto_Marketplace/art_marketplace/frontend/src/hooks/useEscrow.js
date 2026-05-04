@@ -17,7 +17,6 @@ export function useEscrow(contractAddress, usdcAddress) {
   const purchase = async ({ artworkId, artistAddress, amount, currency }) => {
     setLoading(true);
     try {
-      // 1. Crear orden en backend
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const buyerAddress = await signer.getAddress();
@@ -45,9 +44,6 @@ export function useEscrow(contractAddress, usdcAddress) {
         tx = await escrow.createEthEscrow(orderData.order_id_bytes32, artistAddress, { value: amountWei });
       }
       await tx.wait();
-
-      // Notificar al backend (opcional porque el monitor lo hará)
-      // await api.post(`/orders/${orderData.order_id}/confirm`, { tx_hash: tx.hash });
 
       return { success: true, orderId: orderData.order_id, txHash: tx.hash };
     } catch (error) {
