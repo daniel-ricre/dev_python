@@ -9,7 +9,6 @@ from app.models.user import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
-
 async def get_current_ong_admin(
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db)
@@ -19,8 +18,7 @@ async def get_current_ong_admin(
         detail="No se pudo validar el token"
     )
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY,
-                             algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         username: str = payload.get("sub")
         is_admin: bool = payload.get("is_admin", False)
         if not username or not is_admin:
