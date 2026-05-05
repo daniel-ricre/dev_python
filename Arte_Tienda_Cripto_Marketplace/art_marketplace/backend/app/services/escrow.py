@@ -1,5 +1,4 @@
 import uuid
-import random
 from web3 import Web3
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.order import Order, OrderStatus
@@ -14,9 +13,6 @@ class EscrowService:
             amount = int(float(order_data.amount) * 10**6)
         else:
             amount = int(float(order_data.amount) * 10**18)
-
-        # Generar wallet de depósito única para el comprador (wallet a wallet)
-        deposit_wallet = "0x" + Web3.keccak(text=str(uuid.uuid4())).hex()[:40]
 
         order = Order(
             order_id_bytes32=order_id_bytes32,

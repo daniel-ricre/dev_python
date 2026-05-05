@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
 import api from '../services/api';
-import { useEscrow } from '../hooks/useEscrow';
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_ESCROW_CONTRACT;
 const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS;
@@ -9,8 +9,8 @@ const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS;
 export default function Checkout() {
   const { artworkId } = useParams();
   const [artwork, setArtwork] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('wallet'); // wallet o contract
-  const { purchase, loading } = useEscrow(CONTRACT_ADDRESS, USDC_ADDRESS);
+  const [paymentMethod, setPaymentMethod] = useState('wallet');
+  const [loading, setLoading] = useState(false);
   const [paymentData, setPaymentData] = useState(null);
 
   useEffect(() => {
@@ -40,6 +40,7 @@ export default function Checkout() {
 
   const handleWalletPayment = async () => {
     if (!paymentData) return;
+    setLoading(true);
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
@@ -62,26 +63,12 @@ export default function Checkout() {
         });
         await tx.wait();
       }
-      alert('Pago enviado correctamente. La ONG verificará y liberará los fondos.');
+      alert('Pago enviado correctamente. La ONG verificara y liberara los fondos.');
     } catch (err) {
       alert('Error al enviar el pago');
       console.error(err);
-    }
-  };
-
-  const handleContractPayment = async (currency) => {
-    if (!artwork) return;
-    try {
-      const result = await purchase({
-        artworkId: artwork.id,
-        artistAddress: artwork.artist.wallet_address,
-        amount: artwork.price_usd.toString(),
-        currency
-      });
-      alert(`Compra exitosa! Orden: ${result.orderId}`);
-    } catch (err) {
-      alert('Error en la transacción');
-      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -94,20 +81,17 @@ export default function Checkout() {
       <p className="text-gray-700">{artwork.artist?.name}</p>
       <p className="text-3xl font-bold my-4">${artwork.price_usd} USD</p>
 
-      {/* Selector de método de pago */}
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-2">Método de pago</label>
+        <label className="block text-sm font-medium mb-2">Metodo de pago</label>
         <select
           value={paymentMethod}
           onChange={(e) => setPaymentMethod(e.target.value)}
           className="w-full border p-2 rounded"
         >
           <option value="wallet">Pago directo (Wallet a Wallet)</option>
-          <option value="contract">Smart Contract (Escrow)</option>
         </select>
       </div>
 
-      {/* Pago Wallet a Wallet */}
       {paymentMethod === 'wallet' && (
         <div className="space-y-3">
           <button
@@ -129,26 +113,6 @@ export default function Checkout() {
             className="w-full bg-green-600 text-white py-3 rounded hover:bg-green-700 disabled:opacity-50"
           >
             {loading ? 'Procesando...' : '2. Enviar pago'}
-          </button>
-        </div>
-      )}
-
-      {/* Pago con Smart Contract */}
-      {paymentMethod === 'contract' && (
-        <div className="space-y-3">
-          <button
-            onClick={() => handleContractPayment('USDC')}
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading ? 'Procesando...' : 'Pagar con USDC (Escrow)'}
-          </button>
-          <button
-            onClick={() => handleContractPayment('ETH')}
-            disabled={loading}
-            className="w-full bg-purple-600 text-white py-3 rounded hover:bg-purple-700 disabled:opacity-50"
-          >
-            {loading ? 'Procesando...' : 'Pagar con ETH (Escrow)'}
           </button>
         </div>
       )}
