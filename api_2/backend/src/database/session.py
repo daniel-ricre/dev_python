@@ -11,7 +11,7 @@ try:
     engine = create_engine(DATABASE_URL)
 except:
     dir_database = os.getenv("DATABASE_URL_LOCAL")
-    DATABASE_URL = f"sqlite:///api_2/{dir_database}"
+    DATABASE_URL = f"sqlite:///./tets.db"
     engine = create_engine(DATABASE_URL, connect_args={
                            "check_same_thread": False})
 
