@@ -48,16 +48,16 @@ services:
 
   - type: web
     runtime: docker
-    name: art-bepusdt
-    rootDir: Arte_Tienda_Cripto_Marketplace/art_marketplace/bepusdt
+    name: art-x402-facilitator
+    rootDir: Arte_Tienda_Cripto_Marketplace/art_marketplace/x402-facilitator
     plan: free
-    healthCheckPath: /
+    healthCheckPath: /health
     envVars:
-      - key: BEPUSDT_WALLET_ADDRESS
+      - key: X402_WALLET_ADDRESS
         sync: false
-      - key: BEPUSDT_RPC_URL
+      - key: X402_RPC_URL
         sync: false
-      - key: BEPUSDT_USDC_CONTRACT
+      - key: X402_USDC_CONTRACT
         sync: false
 
 databases:
