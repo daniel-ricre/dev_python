@@ -86,6 +86,27 @@ services:
       - key: VITE_USDC_ADDRESS
         sync: false
 
+  # BTCPay Server - Pasarela de pago gratuita y autogestionada
+  - type: web
+    runtime: docker
+    name: art-btcpay
+    rootDir: Arte_Tienda_Cripto_Marketplace/art_marketplace/btcpay
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: BTCPAY_POSTGRES
+        sync: false
+      - key: BTCPAY_NETWORK
+        sync: false
+      - key: BTCPAY_CHAINS
+        sync: false
+      - key: BTCPAY_BIND
+        sync: false
+      - key: BTCPAY_EXTERNALURL
+        sync: false
+      - key: BTCPAY_ROOTPATH
+        sync: false
+
 databases:
   - name: art-db
     plan: free
