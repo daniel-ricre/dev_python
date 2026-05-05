@@ -4,4 +4,4 @@ RUN apk add --no-cache git
 RUN git clone https://github.com/v03413/bepusdt.git .
 RUN go build -o bepusdt ./main
 EXPOSE 8080
-CMD ["./bepusdt"]
+CMD ["./bepusdt", "start"]
