@@ -48,22 +48,16 @@ services:
 
   - type: web
     runtime: docker
-    name: art-btcpay
-    rootDir: Arte_Tienda_Cripto_Marketplace/art_marketplace/btcpay
+    name: art-bepusdt
+    rootDir: Arte_Tienda_Cripto_Marketplace/art_marketplace/bepusdt
     plan: free
     healthCheckPath: /
     envVars:
-      - key: BTCPAY_POSTGRES
+      - key: BEPUSDT_WALLET_ADDRESS
         sync: false
-      - key: BTCPAY_NETWORK
+      - key: BEPUSDT_RPC_URL
         sync: false
-      - key: BTCPAY_CHAINS
-        sync: false
-      - key: BTCPAY_BIND
-        sync: false
-      - key: BTCPAY_EXTERNALURL
-        sync: false
-      - key: BTCPAY_ROOTPATH
+      - key: BEPUSDT_USDC_CONTRACT
         sync: false
 
 databases:
