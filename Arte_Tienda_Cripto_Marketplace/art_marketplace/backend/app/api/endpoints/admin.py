@@ -1,11 +1,12 @@
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from app.api.deps import get_db, get_current_ong_admin
 from app.models.order import Order, OrderStatus
 from app.services.blockchain import BlockchainService
+import uuid
 
 router = APIRouter()
 
@@ -20,15 +21,24 @@ async def list_orders(
     if status:
         stmt = stmt.where(Order.status == status)
     result = await db.execute(stmt)
-    return result.unique().scalars().all()
+    return result.scalars().all()
 
 
 @router.post("/orders/{order_id}/release")
 async def release_payment(
-    order_id: str,
+    order_id: str = Path(..., description="UUID de la orden"),
     db: AsyncSession = Depends(get_db),
     current_admin=Depends(get_current_ong_admin)
 ):
+    # Validar UUID
+    try:
+        uuid.UUID(order_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=422,
+            detail=f"ID inválido: '{order_id}' no es un UUID válido."
+        )
+    
     stmt = select(Order).where(Order.id == order_id)
     result = await db.execute(stmt)
     order = result.scalar_one_or_none()

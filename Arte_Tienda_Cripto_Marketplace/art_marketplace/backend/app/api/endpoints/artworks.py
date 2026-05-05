@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from app.api.deps import get_db
 from app.models.artwork import Artwork
+import uuid
 
 router = APIRouter()
 
@@ -20,7 +21,19 @@ async def list_artworks(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/artworks/{artwork_id}")
-async def get_artwork(artwork_id: str, db: AsyncSession = Depends(get_db)):
+async def get_artwork(
+    artwork_id: str = Path(..., description="UUID de la obra"),
+    db: AsyncSession = Depends(get_db)
+):
+    # Validar que el ID sea un UUID válido
+    try:
+        uuid.UUID(artwork_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=422,
+            detail=f"ID inválido: '{artwork_id}' no es un UUID válido. Debe tener formato como '550e8400-e29b-41d4-a716-446655440000'"
+        )
+    
     stmt = (
         select(Artwork)
         .where(Artwork.id == artwork_id)
@@ -29,5 +42,5 @@ async def get_artwork(artwork_id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(stmt)
     artwork = result.unique().scalar_one_or_none()
     if not artwork:
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=404, detail=f"Obra con ID '{artwork_id}' no encontrada")
     return artwork
