@@ -4,7 +4,7 @@ RUN apk add --no-cache git
 RUN git clone https://github.com/v03413/bepusdt.git .
 RUN go build -o bepusdt ./main
 RUN mkdir -p /app/secure
-RUN cp -r /app/web/secure/* /app/secure/ 2>/dev/null || true
-RUN find /app -name "secure.html" -exec dirname {} \; | head -1 | xargs -I{} cp -r {}/* /app/secure/ 2>/dev/null || true
+RUN find /app -path "*/secure/secure.html" -exec sh -c 'cp -r $(dirname {})/* /app/secure/' \;
+RUN ls -la /app/secure/
 EXPOSE 8080
 CMD ["./bepusdt", "start"]
