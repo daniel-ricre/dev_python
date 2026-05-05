@@ -46,20 +46,6 @@ services:
       - key: VITE_USDC_ADDRESS
         sync: false
 
-  - type: web
-    runtime: docker
-    name: art-x402-facilitator
-    rootDir: Arte_Tienda_Cripto_Marketplace/art_marketplace/x402-facilitator
-    plan: free
-    healthCheckPath: /health
-    envVars:
-      - key: X402_WALLET_ADDRESS
-        sync: false
-      - key: X402_RPC_URL
-        sync: false
-      - key: X402_USDC_CONTRACT
-        sync: false
-
 databases:
   - name: art-db
     plan: free
