@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.api.deps import get_db
 from app.models.user import User
 from app.core.security import get_password_hash
@@ -9,9 +10,6 @@ router = APIRouter()
 
 @router.post("/create-admin")
 async def create_admin(db: AsyncSession = Depends(get_db)):
-    """Endpoint temporal para crear el usuario administrador inicial."""
-    # Verificar si ya existe
-    from sqlalchemy import select
     result = await db.execute(select(User).where(User.username == "admin"))
     existing = result.scalar_one_or_none()
     if existing:
