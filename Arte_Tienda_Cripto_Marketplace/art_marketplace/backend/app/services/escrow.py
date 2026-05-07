@@ -9,10 +9,18 @@ class EscrowService:
 
     async def create_order(self, order_data):
         order_id_bytes32 = "0x" + Web3.keccak(text=str(uuid.uuid4())).hex()[:64]
+        
+        try:
+            amount_float = float(order_data.amount)
+            if amount_float <= 0:
+                raise ValueError("El monto debe ser mayor a 0")
+        except ValueError as e:
+            raise ValueError(f"Monto inválido: '{order_data.amount}'. Debe ser un número positivo.")
+        
         if order_data.currency == "USDC":
-            amount = int(float(order_data.amount) * 10**6)
+            amount = int(amount_float * 10**6)
         else:
-            amount = int(float(order_data.amount) * 10**18)
+            amount = int(amount_float * 10**18)
 
         order = Order(
             order_id_bytes32=order_id_bytes32,
