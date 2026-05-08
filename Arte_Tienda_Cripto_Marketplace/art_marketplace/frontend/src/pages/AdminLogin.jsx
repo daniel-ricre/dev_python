@@ -22,21 +22,25 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="max-w-sm mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Acceso Administración</h1>
-      <form onSubmit={handleLogin} className="space-y-4">
-        <input
-          type="text" placeholder="Usuario" value={username}
-          onChange={e => setUsername(e.target.value)} className="w-full border p-2 rounded"
-        />
-        <input
-          type="password" placeholder="Contraseña" value={password}
-          onChange={e => setPassword(e.target.value)} className="w-full border p-2 rounded"
-        />
-        <button type="submit" className="w-full bg-gray-800 text-white py-2 rounded">
-          Ingresar
-        </button>
-      </form>
+    <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm">
+        <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">Acceso Administración</h1>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <input
+            type="text" placeholder="Usuario" value={username}
+            onChange={e => setUsername(e.target.value)}
+            className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="password" placeholder="Contraseña" value={password}
+            onChange={e => setPassword(e.target.value)}
+            className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium">
+            Ingresar
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
