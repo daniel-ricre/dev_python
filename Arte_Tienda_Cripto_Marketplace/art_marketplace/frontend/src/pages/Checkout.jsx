@@ -2,25 +2,30 @@ import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 
-const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS;
+const ONG_WALLET = '0x1696f4550b99fa8b57CFEfDab466DFEdC4894130';
 
 export default function Checkout() {
   const { artworkId } = useParams();
   const [artwork, setArtwork] = useState(null);
-  const [paymentMethod] = useState('wallet');
   const [loading, setLoading] = useState(false);
   const [paymentData, setPaymentData] = useState(null);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    api.get(`/artworks/${artworkId}`).then(res => setArtwork(res.data));
+    api.get(`/artworks/${artworkId}`)
+      .then(res => setArtwork(res.data))
+      .catch(err => {
+        console.error('Error al cargar obra:', err);
+        setErrorMsg('No se pudo cargar la información de la obra. Verifica tu conexión.');
+      });
   }, [artworkId]);
 
   const handleCreateOrder = async (currency) => {
     if (!artwork) return;
     setLoading(true);
+    setErrorMsg('');
     try {
-      // Intentar obtener la wallet del comprador si existe MetaMask
-      let buyerAddress = '0x0000000000000000000000000000000000000000'; // dirección genérica
+      let buyerAddress = '0x0000000000000000000000000000000000000000';
       if (window.ethereum) {
         try {
           const { ethers } = await import('ethers');
@@ -28,7 +33,7 @@ export default function Checkout() {
           const signer = await provider.getSigner();
           buyerAddress = await signer.getAddress();
         } catch (err) {
-          console.log('No se pudo obtener la wallet, usando dirección genérica');
+          console.log('No se pudo obtener wallet, usando dirección genérica');
         }
       }
 
@@ -41,14 +46,21 @@ export default function Checkout() {
       });
       setPaymentData(res.data);
     } catch (err) {
-      alert('Error al crear la orden');
-      console.error(err);
+      console.error('Error al crear orden:', err);
+      // Si falla la API, mostramos igual los datos de pago manuales
+      setPaymentData({
+        payment_wallet: ONG_WALLET,
+        payment_amount: (artwork.price_usd * 1e6).toString(),
+        payment_currency: 'USDC',
+        fallback: true
+      });
+      setErrorMsg('No se pudo crear la orden automáticamente. Usa los datos manuales de abajo para realizar el pago.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!artwork) return <div className="p-6">Cargando...</div>;
+  if (!artwork) return <div className="p-6 text-center text-gray-500">Cargando obra...</div>;
 
   return (
     <div className="min-h-screen">
@@ -62,6 +74,12 @@ export default function Checkout() {
             <hr className="mb-4" />
             <p className="text-gray-600 mb-2">Método de pago: <strong>Pago directo (Wallet a Wallet)</strong></p>
 
+            {errorMsg && (
+              <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-lg mb-4 text-sm">
+                {errorMsg}
+              </div>
+            )}
+
             <div className="space-y-3">
               <button
                 onClick={() => handleCreateOrder('USDC')}
@@ -74,6 +92,9 @@ export default function Checkout() {
                 <div className="bg-gray-100 p-3 rounded-lg text-sm">
                   <p><strong>Enviar {(paymentData.payment_amount / 1e6).toFixed(2)} USDC</strong></p>
                   <p className="break-all text-xs mt-1 text-gray-600">A: {paymentData.payment_wallet}</p>
+                  {paymentData.fallback && (
+                    <p className="text-xs text-yellow-600 mt-2">* Datos manuales. Realiza la transferencia desde tu wallet.</p>
+                  )}
                 </div>
               )}
             </div>
