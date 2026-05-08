@@ -75,7 +75,7 @@ export default function Checkout() {
   if (!artwork) return <div className="p-6">Cargando...</div>;
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="min-h-screen">
       <div className="max-w-lg mx-auto px-4 py-8">
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <img src={artwork.image_url} alt={artwork.title} className="w-full h-64 object-cover" />

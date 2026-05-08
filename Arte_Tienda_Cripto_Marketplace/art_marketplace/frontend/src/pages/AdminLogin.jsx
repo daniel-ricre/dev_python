@@ -22,7 +22,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">Acceso Administración</h1>
         <form onSubmit={handleLogin} className="space-y-4">
