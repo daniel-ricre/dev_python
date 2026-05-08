@@ -1,9 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
 import api from '../services/api';
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_ESCROW_CONTRACT;
 const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS;
 
 export default function Checkout() {
@@ -19,10 +17,20 @@ export default function Checkout() {
 
   const handleCreateOrder = async (currency) => {
     if (!artwork) return;
+    setLoading(true);
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const buyerAddress = await signer.getAddress();
+      // Intentar obtener la wallet del comprador si existe MetaMask
+      let buyerAddress = '0x0000000000000000000000000000000000000000'; // dirección genérica
+      if (window.ethereum) {
+        try {
+          const { ethers } = await import('ethers');
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const signer = await provider.getSigner();
+          buyerAddress = await signer.getAddress();
+        } catch (err) {
+          console.log('No se pudo obtener la wallet, usando dirección genérica');
+        }
+      }
 
       const res = await api.post('/orders', {
         artwork_id: artwork.id,
@@ -34,38 +42,6 @@ export default function Checkout() {
       setPaymentData(res.data);
     } catch (err) {
       alert('Error al crear la orden');
-      console.error(err);
-    }
-  };
-
-  const handleWalletPayment = async () => {
-    if (!paymentData) return;
-    setLoading(true);
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-
-      if (paymentData.payment_currency === 'USDC') {
-        const usdcContract = new ethers.Contract(
-          USDC_ADDRESS,
-          ['function transfer(address to, uint256 amount) public returns (bool)'],
-          signer
-        );
-        const tx = await usdcContract.transfer(
-          paymentData.payment_wallet,
-          paymentData.payment_amount
-        );
-        await tx.wait();
-      } else {
-        const tx = await signer.sendTransaction({
-          to: paymentData.payment_wallet,
-          value: paymentData.payment_amount
-        });
-        await tx.wait();
-      }
-      alert('Pago enviado correctamente. La ONG verificara y liberara los fondos.');
-    } catch (err) {
-      alert('Error al enviar el pago');
       console.error(err);
     } finally {
       setLoading(false);
@@ -92,21 +68,14 @@ export default function Checkout() {
                 disabled={loading}
                 className="w-full bg-gray-700 text-white py-3 rounded-lg hover:bg-gray-800 disabled:opacity-50 transition"
               >
-                {paymentData ? 'Orden creada' : '1. Crear orden de pago'}
+                {loading ? 'Creando orden...' : paymentData ? 'Orden creada' : '1. Crear orden de pago'}
               </button>
               {paymentData && (
                 <div className="bg-gray-100 p-3 rounded-lg text-sm">
-                  <p><strong>Enviar {paymentData.payment_amount / 1e6} USDC</strong></p>
+                  <p><strong>Enviar {(paymentData.payment_amount / 1e6).toFixed(2)} USDC</strong></p>
                   <p className="break-all text-xs mt-1 text-gray-600">A: {paymentData.payment_wallet}</p>
                 </div>
               )}
-              <button
-                onClick={handleWalletPayment}
-                disabled={!paymentData || loading}
-                className="w-full bg-gradient-to-r from-green-600 to-green-500 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-600 disabled:opacity-50 transition"
-              >
-                {loading ? 'Procesando...' : '2. Enviar pago'}
-              </button>
             </div>
           </div>
         </div>
