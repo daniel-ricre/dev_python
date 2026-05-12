@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_db
 from app.schemas.order import OrderCreate, OrderResponse
@@ -6,7 +6,6 @@ from app.services.escrow import EscrowService
 from app.core.config import settings
 
 router = APIRouter()
-
 
 @router.post("/orders", response_model=OrderResponse)
 async def create_order(order_data: OrderCreate, db: AsyncSession = Depends(get_db)):
@@ -22,5 +21,9 @@ async def create_order(order_data: OrderCreate, db: AsyncSession = Depends(get_d
             "artist": order.artist_address,
             "amount": str(order.amount)
         },
-        "usdc_address": settings.USDC_ADDRESS if order.currency == "USDC" else None
+        "usdc_address": settings.USDC_ADDRESS if order.currency == "USDC" else None,
+        "payment_wallet": settings.ONG_PUBLIC_KEY,
+        "payment_amount": str(order.amount),
+        "payment_currency": order.currency,
+        "btcpay_url": None
     }
