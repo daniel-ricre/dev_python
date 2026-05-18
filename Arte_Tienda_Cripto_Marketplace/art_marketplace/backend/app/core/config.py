@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     CLOUDINARY_CLOUD_NAME: str
     CLOUDINARY_API_KEY: str
     CLOUDINARY_API_SECRET: str
-    FRONTEND_URL: str = "http://localhost:5173"
+    FRONTEND_URL: str = "https://art-frontend-cs3w.onrender.com"
 
     model_config = {"env_file": ".env"}
 
