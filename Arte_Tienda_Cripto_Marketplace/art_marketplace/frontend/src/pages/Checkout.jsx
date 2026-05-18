@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { useAccount, useSwitchChain, useWriteContract, useSendTransaction } from 'wagmi'
+import { useAccount, useSwitchChain, useWriteContract, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi'
 import { arbitrumSepolia } from 'wagmi/chains'
 import api from '../services/api'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
@@ -24,13 +24,18 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false)
   const [paymentData, setPaymentData] = useState(null)
   const [selectedCurrency, setSelectedCurrency] = useState('USDC')
-  const [paymentIntent, setPaymentIntent] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+  const [txHash, setTxHash] = useState(null)
 
   const { address, isConnected, chainId } = useAccount()
   const { switchChain, isPending: isSwitchingChain } = useSwitchChain()
-  const { writeContract, isPending: isWritePending, isSuccess: isWriteSuccess, isError: isWriteError } = useWriteContract()
-  const { sendTransaction, isPending: isSendPending, isSuccess: isSendSuccess, isError: isSendError } = useSendTransaction()
+  const { writeContract, data: writeData } = useWriteContract()
+  const { sendTransaction, data: sendData } = useSendTransaction()
+
+  // Esperar confirmación de la transacción
+  const { isLoading: isConfirming, isSuccess: txSuccess, isError: txError } = useWaitForTransactionReceipt({
+    hash: txHash,
+  })
 
   const walletReady = isConnected && chainId === arbitrumSepolia.id
 
@@ -43,6 +48,26 @@ export default function Checkout() {
       switchChain({ chainId: arbitrumSepolia.id })
     }
   }, [isConnected, chainId, isSwitchingChain, switchChain])
+
+  // Capturar el hash de la transacción cuando se envía
+  useEffect(() => {
+    if (writeData) setTxHash(writeData)
+    if (sendData) setTxHash(sendData)
+  }, [writeData, sendData])
+
+  // Manejar resultado de la transacción
+  useEffect(() => {
+    if (txSuccess) {
+      setLoading(false)
+      setPaymentData(null)
+      setTxHash(null)
+      alert('Pago enviado correctamente. La ONG verificará y liberará los fondos.')
+    } else if (txError) {
+      setLoading(false)
+      setTxHash(null)
+      setErrorMsg('Error al enviar el pago. Verifica que tengas fondos suficientes y la red correcta.')
+    }
+  }, [txSuccess, txError])
 
   const formatAmount = (amount, currency) => {
     if (!amount) return '0'
@@ -67,7 +92,6 @@ export default function Checkout() {
       })
       setPaymentData(res.data)
     } catch (err) {
-      console.error('Error al crear orden:', err)
       setErrorMsg('Error al crear la orden. Verifica tu conexión e intenta de nuevo.')
     } finally {
       setLoading(false)
@@ -76,8 +100,9 @@ export default function Checkout() {
 
   const handleWalletPayment = () => {
     if (!paymentData || !walletReady) return
-    setPaymentIntent(true)
     setLoading(true)
+    setErrorMsg('')
+
     if (paymentData.payment_currency === 'USDC') {
       writeContract({
         address: USDC_ADDRESS,
@@ -92,21 +117,6 @@ export default function Checkout() {
       })
     }
   }
-
-  useEffect(() => {
-    if (!paymentIntent) return
-    if (isWriteSuccess || isSendSuccess) {
-      setLoading(false)
-      setPaymentData(null)
-      setPaymentIntent(false)
-      setErrorMsg('')
-      alert('Pago enviado correctamente. La ONG verificará y liberará los fondos.')
-    } else if (isWriteError || isSendError) {
-      setLoading(false)
-      setPaymentIntent(false)
-      setErrorMsg('Error al enviar el pago. Verifica que tengas fondos suficientes y la red correcta.')
-    }
-  }, [isWriteSuccess, isWriteError, isSendSuccess, isSendError, paymentIntent])
 
   if (!artwork) return <div className="p-6 text-center text-gray-500">Cargando obra...</div>
 
@@ -123,7 +133,9 @@ export default function Checkout() {
 
             {!walletReady && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 text-center">
-                <p className="text-yellow-800 mb-2">{isSwitchingChain ? 'Cambiando...' : 'Para continuar, conecta tu wallet'}</p>
+                <p className="text-yellow-800 mb-2">
+                  {isSwitchingChain ? 'Cambiando a Arbitrum Sepolia...' : 'Para continuar, conecta tu wallet'}
+                </p>
                 <ConnectButton label="Conectar Wallet" />
               </div>
             )}
@@ -157,7 +169,7 @@ export default function Checkout() {
                     </div>
                   )}
                   <button onClick={handleWalletPayment} disabled={!paymentData || loading} className="w-full bg-gradient-to-r from-green-600 to-green-500 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-600 disabled:opacity-50 transition">
-                    {loading && paymentData ? 'Procesando...' : '2. Enviar pago'}
+                    {loading && paymentData ? (isConfirming ? 'Confirmando...' : 'Procesando...') : '2. Enviar pago'}
                   </button>
                 </div>
               </>
