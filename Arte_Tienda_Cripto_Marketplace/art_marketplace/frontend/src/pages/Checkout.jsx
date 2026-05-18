@@ -29,18 +29,8 @@ export default function Checkout() {
 
   const { address, isConnected, chainId } = useAccount()
   const { switchChain, isPending: isSwitchingChain } = useSwitchChain()
-  const {
-    writeContract,
-    isPending: isWritePending,
-    isSuccess: isWriteSuccess,
-    isError: isWriteError
-  } = useWriteContract()
-  const {
-    sendTransaction,
-    isPending: isSendPending,
-    isSuccess: isSendSuccess,
-    isError: isSendError
-  } = useSendTransaction()
+  const { writeContract, isPending: isWritePending, isSuccess: isWriteSuccess, isError: isWriteError } = useWriteContract()
+  const { sendTransaction, isPending: isSendPending, isSuccess: isSendSuccess, isError: isSendError } = useSendTransaction()
 
   const walletReady = isConnected && chainId === arbitrumSepolia.id
 
@@ -54,23 +44,20 @@ export default function Checkout() {
     }
   }, [isConnected, chainId, isSwitchingChain, switchChain])
 
+  const formatAmount = (amount, currency) => {
+    if (!amount) return '0'
+    const num = Number(amount)
+    if (currency === 'USDC') return (num / 1e6).toFixed(2)
+    return (num / 1e18).toFixed(6)
+  }
+
   const handleCreateOrder = async (currency) => {
     if (!artwork) return
     setSelectedCurrency(currency)
     setLoading(true)
     setErrorMsg('')
     try {
-      // Usar la dirección real de wagmi, o una genérica si no está disponible
       const buyerAddress = address || '0x0000000000000000000000000000000000000000'
-      
-      console.log('Creando orden con:', {
-        artwork_id: artwork.id,
-        artist_address: artwork.artist.wallet_address,
-        buyer_address: buyerAddress,
-        amount: artwork.price_usd.toString(),
-        currency: currency
-      })
-
       const res = await api.post('/orders', {
         artwork_id: artwork.id,
         artist_address: artwork.artist.wallet_address,
@@ -91,7 +78,6 @@ export default function Checkout() {
     if (!paymentData || !walletReady) return
     setPaymentIntent(true)
     setLoading(true)
-
     if (paymentData.payment_currency === 'USDC') {
       writeContract({
         address: USDC_ADDRESS,
@@ -137,17 +123,13 @@ export default function Checkout() {
 
             {!walletReady && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 text-center">
-                <p className="text-yellow-800 mb-2">
-                  {isSwitchingChain ? 'Cambiando a Arbitrum Sepolia...' : 'Para continuar, conecta tu wallet'}
-                </p>
+                <p className="text-yellow-800 mb-2">{isSwitchingChain ? 'Cambiando...' : 'Para continuar, conecta tu wallet'}</p>
                 <ConnectButton label="Conectar Wallet" />
               </div>
             )}
 
             {errorMsg && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-800">
-                {errorMsg}
-              </div>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-800">{errorMsg}</div>
             )}
 
             {walletReady && (
@@ -156,46 +138,25 @@ export default function Checkout() {
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                   Wallet conectada: {address?.slice(0, 6)}...{address?.slice(-4)}
                 </div>
-
                 <p className="text-gray-600 mb-2">Método de pago: <strong>Wallet a Wallet</strong></p>
-
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
                   <div className="flex space-x-2">
-                    <button
-                      onClick={() => setSelectedCurrency('USDC')}
-                      className={`px-4 py-2 rounded-lg font-medium transition ${selectedCurrency === 'USDC' ? 'bg-blue-600 text-white shadow' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-                    >
-                      USDC
-                    </button>
-                    <button
-                      onClick={() => setSelectedCurrency('ETH')}
-                      className={`px-4 py-2 rounded-lg font-medium transition ${selectedCurrency === 'ETH' ? 'bg-purple-600 text-white shadow' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-                    >
-                      ETH
-                    </button>
+                    <button onClick={() => setSelectedCurrency('USDC')} className={`px-4 py-2 rounded-lg font-medium transition ${selectedCurrency === 'USDC' ? 'bg-blue-600 text-white shadow' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>USDC</button>
+                    <button onClick={() => setSelectedCurrency('ETH')} className={`px-4 py-2 rounded-lg font-medium transition ${selectedCurrency === 'ETH' ? 'bg-purple-600 text-white shadow' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>ETH</button>
                   </div>
                 </div>
-
                 <div className="space-y-3">
-                  <button
-                    onClick={() => handleCreateOrder(selectedCurrency)}
-                    disabled={loading}
-                    className="w-full bg-gray-700 text-white py-3 rounded-lg hover:bg-gray-800 disabled:opacity-50 transition"
-                  >
+                  <button onClick={() => handleCreateOrder(selectedCurrency)} disabled={loading} className="w-full bg-gray-700 text-white py-3 rounded-lg hover:bg-gray-800 disabled:opacity-50 transition">
                     {loading && !paymentData ? 'Creando orden...' : paymentData ? 'Orden creada' : `1. Crear orden de pago (${selectedCurrency})`}
                   </button>
                   {paymentData && (
                     <div className="bg-gray-100 p-3 rounded-lg text-sm">
-                      <p><strong>Enviar {paymentData.payment_currency === 'USDC' ? (paymentData.payment_amount / 1e6).toFixed(2) : (Number(paymentData.payment_amount) / 1e18).toFixed(6)} {paymentData.payment_currency}</strong></p>
+                      <p><strong>Enviar {formatAmount(paymentData.payment_amount, paymentData.payment_currency)} {paymentData.payment_currency}</strong></p>
                       <p className="break-all text-xs mt-1 text-gray-600">A: {paymentData.payment_wallet}</p>
                     </div>
                   )}
-                  <button
-                    onClick={handleWalletPayment}
-                    disabled={!paymentData || loading}
-                    className="w-full bg-gradient-to-r from-green-600 to-green-500 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-600 disabled:opacity-50 transition"
-                  >
+                  <button onClick={handleWalletPayment} disabled={!paymentData || loading} className="w-full bg-gradient-to-r from-green-600 to-green-500 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-600 disabled:opacity-50 transition">
                     {loading && paymentData ? 'Procesando...' : '2. Enviar pago'}
                   </button>
                 </div>
