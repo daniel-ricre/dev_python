@@ -18,7 +18,6 @@ class EscrowService:
         if order_data.currency == "USDC":
             amount = int(amount_float * 10**6)
         elif order_data.currency == "ETH":
-            # Convertir USD a ETH usando precio real de CoinGecko
             amount = await PriceService.usd_to_eth(amount_float)
         else:
             raise ValueError(f"Moneda no soportada: {order_data.currency}")

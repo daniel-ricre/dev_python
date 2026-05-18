@@ -1,5 +1,4 @@
 import httpx
-from decimal import Decimal
 
 class PriceService:
     """Obtiene el precio actual de ETH en USD desde CoinGecko."""
@@ -19,10 +18,8 @@ class PriceService:
                     data = response.json()
                     return float(data["ethereum"]["usd"])
                 else:
-                    # Precio de respaldo si la API falla
                     return 3000.00
         except Exception:
-            # Si hay error de red, usar precio de respaldo
             return 3000.00
     
     @staticmethod
