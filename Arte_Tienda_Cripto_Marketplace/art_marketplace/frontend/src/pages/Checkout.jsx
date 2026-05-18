@@ -1,21 +1,14 @@
 import { useParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { useAccount, useSwitchChain, useWriteContract, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount, useSwitchChain, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi'
 import { arbitrumSepolia } from 'wagmi/chains'
+import { ethers } from 'ethers'
 import api from '../services/api'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 
 const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS
 const USDC_ABI = [
-  {
-    type: 'function',
-    name: 'transfer',
-    inputs: [
-      { name: 'to', type: 'address' },
-      { name: 'amount', type: 'uint256' }
-    ],
-    outputs: [{ name: '', type: 'bool' }]
-  }
+  'function transfer(address to, uint256 amount) public returns (bool)'
 ]
 
 export default function Checkout() {
@@ -29,10 +22,8 @@ export default function Checkout() {
 
   const { address, isConnected, chainId } = useAccount()
   const { switchChain, isPending: isSwitchingChain } = useSwitchChain()
-  const { writeContract, data: writeData } = useWriteContract()
   const { sendTransaction, data: sendData } = useSendTransaction()
 
-  // Esperar confirmación de la transacción
   const { isLoading: isConfirming, isSuccess: txSuccess, isError: txError } = useWaitForTransactionReceipt({
     hash: txHash,
   })
@@ -49,13 +40,10 @@ export default function Checkout() {
     }
   }, [isConnected, chainId, isSwitchingChain, switchChain])
 
-  // Capturar el hash de la transacción cuando se envía
   useEffect(() => {
-    if (writeData) setTxHash(writeData)
     if (sendData) setTxHash(sendData)
-  }, [writeData, sendData])
+  }, [sendData])
 
-  // Manejar resultado de la transacción
   useEffect(() => {
     if (txSuccess) {
       setLoading(false)
@@ -92,29 +80,45 @@ export default function Checkout() {
       })
       setPaymentData(res.data)
     } catch (err) {
-      setErrorMsg('Error al crear la orden. Verifica tu conexión e intenta de nuevo.')
+      setErrorMsg('Error al crear la orden.')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleWalletPayment = () => {
+  const handleWalletPayment = async () => {
     if (!paymentData || !walletReady) return
     setLoading(true)
     setErrorMsg('')
-
-    if (paymentData.payment_currency === 'USDC') {
-      writeContract({
-        address: USDC_ADDRESS,
-        abi: USDC_ABI,
-        functionName: 'transfer',
-        args: [paymentData.payment_wallet, BigInt(paymentData.payment_amount)],
-      })
-    } else {
-      sendTransaction({
-        to: paymentData.payment_wallet,
-        value: BigInt(paymentData.payment_amount),
-      })
+    try {
+      if (paymentData.payment_currency === 'USDC') {
+        // USDC: usar ethers.js directamente (abre MetaMask seguro)
+        const provider = new ethers.BrowserProvider(window.ethereum)
+        const signer = await provider.getSigner()
+        const usdc = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer)
+        const tx = await usdc.transfer(paymentData.payment_wallet, BigInt(paymentData.payment_amount))
+        setTxHash(tx.hash)
+        await tx.wait()
+        setLoading(false)
+        setPaymentData(null)
+        setTxHash(null)
+        alert('Pago enviado correctamente. La ONG verificará y liberará los fondos.')
+      } else {
+        // ETH: usar wagmi sendTransaction
+        sendTransaction({
+          to: paymentData.payment_wallet,
+          value: BigInt(paymentData.payment_amount),
+        })
+      }
+    } catch (err) {
+      console.error('Error en pago:', err)
+      setLoading(false)
+      setTxHash(null)
+      if (err.code === 'ACTION_REJECTED') {
+        setErrorMsg('Transacción rechazada por el usuario.')
+      } else {
+        setErrorMsg('Error al enviar el pago. Verifica que tengas fondos suficientes.')
+      }
     }
   }
 
