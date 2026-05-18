@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.api.endpoints import orders, artworks, artists, admin, auth, webhook, seed, artworks_admin, artists_admin, create_admin, health
+from app.api.endpoints import orders, artworks, artists, admin, auth, webhook, seed, artworks_admin, artists_admin, create_admin, health, factura
 
 app = FastAPI(title="Art Marketplace API")
 
@@ -19,7 +19,6 @@ async def create_tables():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-# Rutas con prefijo /api/v1
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(artists.router, prefix="/api/v1")
 app.include_router(artworks.router, prefix="/api/v1")
@@ -30,9 +29,5 @@ app.include_router(seed.router, prefix="/api/v1")
 app.include_router(artworks_admin.router, prefix="/api/v1")
 app.include_router(artists_admin.router, prefix="/api/v1")
 app.include_router(create_admin.router, prefix="/api/v1")
-
-# Health check en /api/v1/health
 app.include_router(health.router, prefix="/api/v1")
-
-# Health check en la raíz (sin prefijo)
-app.include_router(health.router, prefix="")
+app.include_router(factura.router, prefix="/api/v1")
