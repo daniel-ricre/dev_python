@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.api.endpoints import orders, artworks, artists, admin, auth, webhook, seed, artworks_admin, artists_admin, create_admin, health, factura
+from app.api.endpoints import orders, artworks, artists, admin, auth, webhook, seed, artworks_admin, artists_admin, create_admin, health, factura, migrate
 
 app = FastAPI(title="Art Marketplace API")
 
@@ -32,3 +32,4 @@ app.include_router(create_admin.router, prefix="/api/v1")
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(health.router, prefix="")
 app.include_router(factura.router, prefix="/api/v1")
+app.include_router(migrate.router, prefix="/api/v1")
