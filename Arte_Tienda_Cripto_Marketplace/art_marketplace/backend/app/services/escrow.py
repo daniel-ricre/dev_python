@@ -2,6 +2,7 @@ import uuid
 from web3 import Web3
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.order import Order, OrderStatus
+from app.services.price_service import PriceService
 
 class EscrowService:
     def __init__(self, db: AsyncSession):
@@ -10,18 +11,15 @@ class EscrowService:
     async def create_order(self, order_data):
         order_id_bytes32 = "0x" + Web3.keccak(text=str(uuid.uuid4())).hex()[:64]
         
-        # Convertir el monto correctamente
         amount_float = float(order_data.amount)
         if amount_float <= 0:
             raise ValueError(f"Monto inválido: '{order_data.amount}'")
         
         if order_data.currency == "USDC":
-            amount = int(amount_float * 10**6)  # 6 decimales para USDC
+            amount = int(amount_float * 10**6)
         elif order_data.currency == "ETH":
-            # Convertir USD a ETH (asumiendo que el precio ya está en USD)
-            # En producción, aquí consultarías un oráculo de precio
-            # Por ahora, usamos el precio en USD directamente como wei
-            amount = int(amount_float * 10**18)  # 18 decimales para ETH
+            # Convertir USD a ETH usando precio real de CoinGecko
+            amount = await PriceService.usd_to_eth(amount_float)
         else:
             raise ValueError(f"Moneda no soportada: {order_data.currency}")
 
