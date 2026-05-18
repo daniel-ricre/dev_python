@@ -10,17 +10,20 @@ class EscrowService:
     async def create_order(self, order_data):
         order_id_bytes32 = "0x" + Web3.keccak(text=str(uuid.uuid4())).hex()[:64]
         
-        try:
-            amount_float = float(order_data.amount)
-            if amount_float <= 0:
-                raise ValueError("El monto debe ser mayor a 0")
-        except ValueError as e:
-            raise ValueError(f"Monto inválido: '{order_data.amount}'. Debe ser un número positivo.")
+        # Convertir el monto correctamente
+        amount_float = float(order_data.amount)
+        if amount_float <= 0:
+            raise ValueError(f"Monto inválido: '{order_data.amount}'")
         
         if order_data.currency == "USDC":
-            amount = int(amount_float * 10**6)
+            amount = int(amount_float * 10**6)  # 6 decimales para USDC
+        elif order_data.currency == "ETH":
+            # Convertir USD a ETH (asumiendo que el precio ya está en USD)
+            # En producción, aquí consultarías un oráculo de precio
+            # Por ahora, usamos el precio en USD directamente como wei
+            amount = int(amount_float * 10**18)  # 18 decimales para ETH
         else:
-            amount = int(amount_float * 10**18)
+            raise ValueError(f"Moneda no soportada: {order_data.currency}")
 
         order = Order(
             order_id_bytes32=order_id_bytes32,
