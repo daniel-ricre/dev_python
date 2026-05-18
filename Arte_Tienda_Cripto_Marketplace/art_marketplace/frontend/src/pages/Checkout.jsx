@@ -1,15 +1,14 @@
 import { useParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { useAccount, useSwitchChain, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount, useSwitchChain, useSendTransaction } from 'wagmi'
 import { arbitrumSepolia } from 'wagmi/chains'
 import { ethers } from 'ethers'
 import api from '../services/api'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 
 const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS
-const USDC_ABI = [
-  'function transfer(address to, uint256 amount) public returns (bool)'
-]
+const USDC_ABI = ['function transfer(address to, uint256 amount) public returns (bool)']
+const ONG_WALLET = '0x1696f4550b99fa8b57CFEfDab466DFEdC4894130'
 
 export default function Checkout() {
   const { artworkId } = useParams()
@@ -18,15 +17,11 @@ export default function Checkout() {
   const [paymentData, setPaymentData] = useState(null)
   const [selectedCurrency, setSelectedCurrency] = useState('USDC')
   const [errorMsg, setErrorMsg] = useState('')
-  const [txHash, setTxHash] = useState(null)
+  const [showQR, setShowQR] = useState(false)
 
   const { address, isConnected, chainId } = useAccount()
   const { switchChain, isPending: isSwitchingChain } = useSwitchChain()
-  const { sendTransaction, data: sendData } = useSendTransaction()
-
-  const { isLoading: isConfirming, isSuccess: txSuccess, isError: txError } = useWaitForTransactionReceipt({
-    hash: txHash,
-  })
+  const { sendTransaction } = useSendTransaction()
 
   const walletReady = isConnected && chainId === arbitrumSepolia.id
 
@@ -40,23 +35,6 @@ export default function Checkout() {
     }
   }, [isConnected, chainId, isSwitchingChain, switchChain])
 
-  useEffect(() => {
-    if (sendData) setTxHash(sendData)
-  }, [sendData])
-
-  useEffect(() => {
-    if (txSuccess) {
-      setLoading(false)
-      setPaymentData(null)
-      setTxHash(null)
-      alert('Pago enviado correctamente. La ONG verificará y liberará los fondos.')
-    } else if (txError) {
-      setLoading(false)
-      setTxHash(null)
-      setErrorMsg('Error al enviar el pago. Verifica que tengas fondos suficientes y la red correcta.')
-    }
-  }, [txSuccess, txError])
-
   const formatAmount = (amount, currency) => {
     if (!amount) return '0'
     const num = Number(amount)
@@ -69,6 +47,7 @@ export default function Checkout() {
     setSelectedCurrency(currency)
     setLoading(true)
     setErrorMsg('')
+    setShowQR(false)
     try {
       const buyerAddress = address || '0x0000000000000000000000000000000000000000'
       const res = await api.post('/orders', {
@@ -79,6 +58,7 @@ export default function Checkout() {
         currency: currency
       })
       setPaymentData(res.data)
+      setShowQR(true) // Mostrar factura con QR automáticamente
     } catch (err) {
       setErrorMsg('Error al crear la orden.')
     } finally {
@@ -92,33 +72,26 @@ export default function Checkout() {
     setErrorMsg('')
     try {
       if (paymentData.payment_currency === 'USDC') {
-        // USDC: usar ethers.js directamente (abre MetaMask seguro)
         const provider = new ethers.BrowserProvider(window.ethereum)
         const signer = await provider.getSigner()
         const usdc = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer)
         const tx = await usdc.transfer(paymentData.payment_wallet, BigInt(paymentData.payment_amount))
-        setTxHash(tx.hash)
         await tx.wait()
-        setLoading(false)
-        setPaymentData(null)
-        setTxHash(null)
-        alert('Pago enviado correctamente. La ONG verificará y liberará los fondos.')
       } else {
-        // ETH: usar wagmi sendTransaction
         sendTransaction({
           to: paymentData.payment_wallet,
           value: BigInt(paymentData.payment_amount),
         })
       }
+      alert('Pago enviado correctamente. La ONG verificará y liberará los fondos.')
+      setPaymentData(null)
+      setShowQR(false)
     } catch (err) {
-      console.error('Error en pago:', err)
-      setLoading(false)
-      setTxHash(null)
-      if (err.code === 'ACTION_REJECTED') {
-        setErrorMsg('Transacción rechazada por el usuario.')
-      } else {
+      if (err.code !== 'ACTION_REJECTED') {
         setErrorMsg('Error al enviar el pago. Verifica que tengas fondos suficientes.')
       }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -166,14 +139,27 @@ export default function Checkout() {
                   <button onClick={() => handleCreateOrder(selectedCurrency)} disabled={loading} className="w-full bg-gray-700 text-white py-3 rounded-lg hover:bg-gray-800 disabled:opacity-50 transition">
                     {loading && !paymentData ? 'Creando orden...' : paymentData ? 'Orden creada' : `1. Crear orden de pago (${selectedCurrency})`}
                   </button>
-                  {paymentData && (
-                    <div className="bg-gray-100 p-3 rounded-lg text-sm">
-                      <p><strong>Enviar {formatAmount(paymentData.payment_amount, paymentData.payment_currency)} {paymentData.payment_currency}</strong></p>
-                      <p className="break-all text-xs mt-1 text-gray-600">A: {paymentData.payment_wallet}</p>
+
+                  {/* Factura con QR */}
+                  {showQR && paymentData && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                      <p className="text-sm text-gray-600 mb-3">Escanea el QR con tu wallet móvil</p>
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(paymentData.payment_wallet)}`}
+                        alt="QR de pago"
+                        className="mx-auto w-44 h-44 mb-3"
+                      />
+                      <div className="bg-white border rounded-lg p-2 mb-2">
+                        <p className="text-lg font-bold text-blue-700">
+                          {formatAmount(paymentData.payment_amount, paymentData.payment_currency)} {paymentData.payment_currency}
+                        </p>
+                      </div>
+                      <p className="text-xs text-gray-500 break-all mb-3">{paymentData.payment_wallet}</p>
                     </div>
                   )}
+
                   <button onClick={handleWalletPayment} disabled={!paymentData || loading} className="w-full bg-gradient-to-r from-green-600 to-green-500 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-600 disabled:opacity-50 transition">
-                    {loading && paymentData ? (isConfirming ? 'Confirmando...' : 'Procesando...') : '2. Enviar pago'}
+                    {loading && paymentData ? 'Procesando...' : '2. Enviar pago'}
                   </button>
                 </div>
               </>
