@@ -1,7 +1,7 @@
 import uuid
 import enum
 from datetime import datetime
-from sqlalchemy import Column, String, BigInteger, Enum, DateTime, ForeignKey
+from sqlalchemy import Column, String, Numeric, Enum, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -24,7 +24,7 @@ class Order(Base):
     artwork_id = Column(UUID(as_uuid=True), ForeignKey("artworks.id"))
     buyer_address = Column(String(42), nullable=False)
     artist_address = Column(String(42), nullable=False)
-    amount = Column(BigInteger, nullable=False)
+    amount = Column(Numeric, nullable=False)  # Cambiado de BigInteger a Numeric para soportar ETH (18 decimales)
     currency = Column(Enum(Currency), nullable=False)
     status = Column(Enum(OrderStatus), default=OrderStatus.PENDING)
     tx_hash = Column(String(66))
