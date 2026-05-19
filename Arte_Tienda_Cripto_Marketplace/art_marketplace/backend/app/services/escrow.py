@@ -27,6 +27,7 @@ class EscrowService:
             artwork_id=order_data.artwork_id,
             artist_address=order_data.artist_address,
             buyer_address=order_data.buyer_address,
+            buyer_email=getattr(order_data, 'buyer_email', None),
             amount=amount,
             currency=order_data.currency,
             status=OrderStatus.PENDING,

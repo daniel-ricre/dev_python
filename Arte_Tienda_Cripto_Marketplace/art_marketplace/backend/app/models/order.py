@@ -23,8 +23,9 @@ class Order(Base):
     order_id_bytes32 = Column(String(66), unique=True, nullable=False, index=True)
     artwork_id = Column(UUID(as_uuid=True), ForeignKey("artworks.id"))
     buyer_address = Column(String(42), nullable=False)
+    buyer_email = Column(String(255), nullable=True)  # NUEVO: email opcional para notificaciones
     artist_address = Column(String(42), nullable=False)
-    amount = Column(Numeric, nullable=False)  # Cambiado de BigInteger a Numeric para soportar ETH (18 decimales)
+    amount = Column(Numeric, nullable=False)
     currency = Column(Enum(Currency), nullable=False)
     status = Column(Enum(OrderStatus), default=OrderStatus.PENDING)
     tx_hash = Column(String(66))

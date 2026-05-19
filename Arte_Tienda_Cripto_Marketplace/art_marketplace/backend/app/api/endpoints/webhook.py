@@ -1,65 +1,53 @@
-from fastapi import APIRouter, Request, HTTPException, Depends
+from fastapi import APIRouter, Request, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from app.api.deps import get_db
 from app.models.order import Order, OrderStatus
-import json
+from app.services.email_service import EmailService
+from app.schemas.webhook import WebhookData
 
 router = APIRouter()
 
 
 @router.post("/webhook/btcpay")
-async def btcpay_webhook(request: Request, db: AsyncSession = Depends(get_db)):
-    """
-    Recibe notificaciones de BTCPay Server cuando un pago es confirmado.
-    Soporta tanto BTCPay Server como OxaPay como Depay.
-    """
-    try:
-        # Intentar leer el cuerpo como JSON
-        try:
-            data = await request.json()
-        except Exception:
-            # Si no es JSON, intentar como form data
-            body = await request.body()
-            if not body:
-                return {"status": "ignored", "message": "Cuerpo vacío, ignorado"}
-            raise HTTPException(status_code=400, detail="El cuerpo debe ser JSON válido")
+async def btcpay_webhook(
+    data: WebhookData,
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    order_id_bytes32 = (
+        (data.metadata or {}).get("orderId") if data.metadata else None
+    ) or data.orderId or data.order_id or data.invoiceId
 
-        if not data:
-            return {"status": "ignored", "message": "Sin datos, ignorado"}
+    if not order_id_bytes32:
+        return {"status": "ignored", "message": "No se encontró orderId en los datos"}
 
-        # Intentar obtener el orderId desde diferentes formatos
-        order_id_bytes32 = (
-            data.get("metadata", {}).get("orderId") or
-            data.get("invoiceId") or
-            data.get("order_id") or
-            data.get("orderId")
-        )
+    stmt = select(Order).options(joinedload(Order.artwork)).where(Order.order_id_bytes32 == str(order_id_bytes32))
+    result = await db.execute(stmt)
+    order = result.scalar_one_or_none()
 
-        if not order_id_bytes32:
-            return {"status": "ignored", "message": "No se encontró orderId en los datos"}
+    if order and order.status == OrderStatus.PENDING:
+        status = str(data.status or "").lower()
+        if status in ["confirmed", "complete", "paid", "succeed", "success"]:
+            order.status = OrderStatus.PAID
+            order.tx_hash = str(data.txid or data.tx_hash or "")
+            await db.commit()
 
-        # Buscar la orden
-        stmt = select(Order).where(Order.order_id_bytes32 == str(order_id_bytes32))
-        result = await db.execute(stmt)
-        order = result.scalar_one_or_none()
+            # Enviar correo de confirmación al comprador (si tiene email)
+            if order.buyer_email and order.artwork:
+                amount_display = f"{float(order.amount) / 1e6:.2f}" if order.currency == "USDC" else f"{float(order.amount) / 1e18:.6f}"
+                await EmailService.send_payment_confirmation(
+                    to_email=order.buyer_email,
+                    order_id=str(order.id),
+                    artwork_title=order.artwork.title,
+                    amount=amount_display,
+                    currency=order.currency
+                )
 
-        if order and order.status == OrderStatus.PENDING:
-            status = str(data.get("status", "")).lower()
-            if status in ["confirmed", "complete", "paid", "succeed", "success"]:
-                order.status = OrderStatus.PAID
-                order.tx_hash = str(data.get("txid", data.get("tx_hash", "")))
-                await db.commit()
-                return {"status": "ok", "message": "Pago confirmado"}
+            return {"status": "ok", "message": "Pago confirmado"}
 
-        if not order:
-            return {"status": "ignored", "message": f"Orden {order_id_bytes32} no encontrada"}
-        
-        return {"status": "ignored", "message": f"Orden en estado {order.status}, no procesada"}
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        # Log del error pero no devolver 500
-        print(f"Error en webhook: {str(e)}")
-        return {"status": "error", "message": f"Error procesando webhook: {str(e)}"}
+    if not order:
+        return {"status": "ignored", "message": f"Orden {order_id_bytes32} no encontrada"}
+    
+    return {"status": "ignored", "message": f"Orden en estado {order.status}, no procesada"}

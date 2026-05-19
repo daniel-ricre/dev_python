@@ -5,6 +5,7 @@ class OrderCreate(BaseModel):
     artwork_id: str = Field(..., description="UUID de la obra")
     artist_address: str = Field(..., description="Dirección del artista en Arbitrum")
     buyer_address: str = Field(..., description="Dirección del comprador en Arbitrum")
+    buyer_email: str | None = Field(None, description="Email del comprador para notificaciones (opcional)")
     amount: str = Field(..., description="Monto en USD (ej: 350.00)")
     currency: Currency = Field(..., description="USDC o ETH")
 
@@ -15,18 +16,15 @@ class OrderCreate(BaseModel):
             value = float(v)
             if value <= 0:
                 raise ValueError('El monto debe ser mayor a 0')
-        except ValueError as e:
-            raise ValueError(f'Monto inválido: "{v}". Debe ser un número positivo, por ejemplo: "350.00"')
+        except ValueError:
+            raise ValueError(f'Monto inválido: "{v}". Debe ser un número positivo.')
         return v
 
-    @field_validator('artwork_id')
+    @field_validator('buyer_email')
     @classmethod
-    def validate_uuid(cls, v: str) -> str:
-        import uuid
-        try:
-            uuid.UUID(v)
-        except ValueError:
-            raise ValueError(f'ID de obra inválido: "{v}". Debe ser un UUID válido.')
+    def validate_email(cls, v: str | None) -> str | None:
+        if v and '@' not in v:
+            raise ValueError(f'Email inválido: "{v}"')
         return v
 
 class OrderResponse(BaseModel):
