@@ -4,7 +4,7 @@ services:
     name: art-backend
     rootDir: Arte_Tienda_Cripto_Marketplace/art_marketplace/backend
     plan: free
-    healthCheckPath: /docs
+    healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -32,6 +32,14 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      - key: POSTAL_SMTP_HOST
+        sync: false
+      - key: POSTAL_SMTP_PORT
+        sync: false
+      - key: POSTAL_SMTP_USER
+        sync: false
+      - key: POSTAL_SMTP_PASS
+        sync: false
 
   - type: web
     runtime: docker
@@ -45,6 +53,32 @@ services:
         sync: false
       - key: VITE_USDC_ADDRESS
         sync: false
+
+  - type: web
+    runtime: docker
+    name: art-postal
+    rootDir: Arte_Tienda_Cripto_Marketplace/art_marketplace/postal
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: POSTAL_DB_HOST
+        fromDatabase:
+          name: art-db
+          property: host
+      - key: POSTAL_DB_PORT
+        fromDatabase:
+          name: art-db
+          property: port
+      - key: POSTAL_DB_USER
+        fromDatabase:
+          name: art-db
+          property: user
+      - key: POSTAL_DB_PASS
+        fromDatabase:
+          name: art-db
+          property: password
+      - key: POSTAL_DB_NAME
+        value: postal_db
 
 databases:
   - name: art-db

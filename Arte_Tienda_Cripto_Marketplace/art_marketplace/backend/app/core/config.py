@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     CLOUDINARY_API_KEY: str
     CLOUDINARY_API_SECRET: str
     FRONTEND_URL: str = "https://art-frontend-cs3w.onrender.com"
+    POSTAL_SMTP_HOST: str = ""
+    POSTAL_SMTP_PORT: int = 2525
+    POSTAL_SMTP_USER: str = ""
+    POSTAL_SMTP_PASS: str = ""
 
     model_config = {"env_file": ".env"}
 
